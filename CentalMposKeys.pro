@@ -25,16 +25,32 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
+        ConnectionSettingDialog/connectionsettingdialog.cpp \
+        DataBases/databases.cpp \
+        FindKeysDialog/findkeysdialog.cpp \
+        LoggingCategories/loggingcategories.cpp \
+        SelectKeyDateDialog/selectkeydatedialog.cpp \
         main.cpp \
         mainwindow.cpp
 
 HEADERS += \
+        ConnectionSettingDialog/connectionsettingdialog.h \
+        DataBases/databases.h \
+        FindKeysDialog/findkeysdialog.h \
+        LoggingCategories/loggingcategories.h \
+        SelectKeyDateDialog/selectkeydatedialog.h \
         mainwindow.h
 
 FORMS += \
+        ConnectionSettingDialog/connectionsettingdialog.ui \
+        FindKeysDialog/findkeysdialog.ui \
+        SelectKeyDateDialog/selectkeydatedialog.ui \
         mainwindow.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+RESOURCES += \
+    recource.qrc
