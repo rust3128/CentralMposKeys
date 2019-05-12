@@ -70,6 +70,9 @@ void FindKeysDialog::slotCheckFindMethod()
         ui->lineEditPath->setEnabled(false);
         ui->toolButtonFolder->setEnabled(false);
     }
+    qInfo(logInfo()) << "Size RRO num" << m_rroZN.size();
+    if((m_rroZN.size() > 0) && (m_rroZN.size() < 10))
+        ui->pushButtonFind->setEnabled(false);
 }
 
 void FindKeysDialog::on_comboBoxFirms_activated(int idx)
