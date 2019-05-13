@@ -6,5 +6,8 @@
         <file>Icons/addkeys.png</file>
         <file>Icons/folder2.png</file>
         <file>Icons/server.png</file>
+        <file>Icons/SelectAl.png</file>
+        <file>Icons/unselectAll.png</file>
+        <file>Icons/exit.png</file>
     </qresource>
 </RCC>
