@@ -165,7 +165,7 @@
         </property>
         <property name="icon">
          <iconset resource="../recource.qrc">
-          <normaloff>:/Icons/folder2.png</normaloff>:/Icons/folder2.png</iconset>
+          <normaloff>:/Icons/floppy.png</normaloff>:/Icons/floppy.png</iconset>
         </property>
         <property name="iconSize">
          <size>
@@ -178,7 +178,7 @@
       <item row="6" column="3">
        <widget class="QPushButton" name="pushButton">
         <property name="text">
-         <string>Отмена</string>
+         <string>Закрыть</string>
         </property>
         <property name="icon">
          <iconset resource="../recource.qrc">
@@ -205,6 +205,9 @@
         </property>
         <property name="selectionBehavior">
          <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <property name="sortingEnabled">
+         <bool>false</bool>
         </property>
        </widget>
       </item>

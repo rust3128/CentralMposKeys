@@ -9,5 +9,6 @@
         <file>Icons/SelectAl.png</file>
         <file>Icons/unselectAll.png</file>
         <file>Icons/exit.png</file>
+        <file>Icons/floppy.png</file>
     </qresource>
 </RCC>

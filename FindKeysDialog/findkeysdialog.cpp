@@ -3,9 +3,12 @@
 #include "LoggingCategories/loggingcategories.h"
 #include "SelectKeyDateDialog/selectkeydatedialog.h"
 
-#include <QFileDialog>
+
 #include <QRegExpValidator>
 #include <QMessageBox>
+#include <QDateTime>
+#include <QFile>
+#include <QProgressDialog>
 
 FindKeysDialog::FindKeysDialog(QWidget *parent) :
     QDialog(parent),
@@ -48,6 +51,15 @@ void FindKeysDialog::createUI()
     m_currentFirmID=-1;
     ui->groupBoxRro->hide();
     ui->labelInfo->hide();
+    QString curPath = QDir::currentPath()+"/Keys";
+
+    dir = QDir(curPath);
+    if(!dir.exists()){
+        dir.mkdir(curPath);
+    }
+    dir.cd(curPath);
+
+    ui->lineEditPath->setText(dir.absolutePath());
 }
 
 void FindKeysDialog::createModels()
@@ -81,13 +93,13 @@ void FindKeysDialog::slotCheckFindMethod()
 void FindKeysDialog::on_comboBoxFirms_activated(int idx)
 {
     m_currentFirmID = modelFirms->data(modelFirms->index(idx,0)).toInt();
-    qInfo(logInfo()) << "Selected firmID" << m_currentFirmID;
+    m_currentFirmName = modelFirms->data(modelFirms->index(idx,1)).toString();
     ui->pushButtonFind->setEnabled(true);
 }
 
 void FindKeysDialog::on_toolButtonFolder_clicked()
 {
-    keyPath = QFileDialog::getExistingDirectory(nullptr, "Выберите папку с ключами", "");
+    keyPath = QFileDialog::getExistingDirectory(nullptr, "Выберите папку с ключами",dir.absolutePath());
     ui->lineEditPath->setText(keyPath);
     ui->pushButtonFind->setEnabled(true);
 }
@@ -118,11 +130,13 @@ void FindKeysDialog::databaseFindKey()
 {
     modelRRO = new QSqlQueryModel();
     QString strSQL = QString("SELECT r.KEY_ID, r.FIRM_ID, TRIM(r.POSNUMBER), r.DAT, r.KEYDATA, r.DAT_EXPIRE FROM KEYS r "
-            "WHERE r.FIRM_ID= %1 AND r.").arg(m_currentFirmID)
+            "WHERE r.FIRM_ID= %1 ").arg(m_currentFirmID)
             + m_DateWhereStr +
             " ORDER BY r.POSNUMBER";
     ui->groupBoxRro->show();
     modelRRO->setQuery(strSQL);
+    while(modelRRO->canFetchMore())
+        modelRRO->fetchMore();
     rowCount = modelRRO->rowCount();
     ui->groupBox->setDisabled(rowCount>0);
     modelRRO->setHeaderData(2,Qt::Horizontal,"№ ЭККА");
@@ -191,4 +205,40 @@ void FindKeysDialog::on_tableView_clicked(const QModelIndex &index)
     Q_UNUSED(index);
     QModelIndexList selection = ui->tableView->selectionModel()->selectedRows();
     emit signalUpdateLabelInfo("Найдено ключей "+QString::number(rowCount)+". Выбрано "+QString::number(selection.count())+".");
+}
+
+void FindKeysDialog::on_pushButtonSaveFolder_clicked()
+{
+    QString pathKey = dir.absolutePath()+"/" + m_currentFirmName;
+    dir.mkdir(pathKey);
+//    dir.cd(pathKey);
+    QModelIndexList selection = ui->tableView->selectionModel()->selectedRows();
+    int selCount=selection.size();
+    if(selCount == 0){
+        QMessageBox::information(this, "Ошибка", "Не выбрано ни одного ключа!");
+        return;
+    }
+    QString fileName;
+    QProgressDialog prDlg(this);
+    prDlg.setRange(0, selCount);
+    prDlg.setLabelText("Создание файлов с ключами.");
+    prDlg.show();
+    int progress=0;
+    for(int i =0;i<selCount;i++){
+        QModelIndex idx = selection.at(i);
+        fileName = "mposdrv_"+modelRRO->data(modelRRO->index(idx.row(),2)).toString()+"_"+modelRRO->data(modelRRO->index(idx.row(),5)).toDate().toString("yyyy-MM-dd") +".key";
+        fileName = pathKey+"/"+fileName;
+//        qInfo(logInfo()) << fileName;
+        QFile newKeyFile(fileName);
+        if(newKeyFile.open(QIODevice::WriteOnly)){
+            newKeyFile.write(modelRRO->data(modelRRO->index(idx.row(),4)).toByteArray());
+        }
+        newKeyFile.close();
+        QApplication::processEvents();
+        ++progress;
+        prDlg.setValue(progress);
+
+
+    }
+    prDlg.deleteLater();
 }

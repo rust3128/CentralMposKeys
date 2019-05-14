@@ -5,6 +5,7 @@
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QSqlQueryModel>
+#include <QFileDialog>
 
 
 namespace Ui {
@@ -33,15 +34,19 @@ private slots:
     void slotUpdateLabelInfo(QString str);
     void on_tableView_clicked(const QModelIndex &index);
 
+    void on_pushButtonSaveFolder_clicked();
+
 private:
     Ui::FindKeysDialog *ui;
     QSqlQueryModel *modelFirms;
     QSqlQueryModel *modelRRO;
     int m_currentFirmID;
+    QString m_currentFirmName;
     int rowCount;
     QString keyPath;
     QString m_rroZN;
     QString m_DateWhereStr;
+    QDir dir;
 
 private:
     void createConnections();
