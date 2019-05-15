@@ -60,6 +60,7 @@ void FindKeysDialog::createUI()
     dir.cd(curPath);
 
     ui->lineEditPath->setText(dir.absolutePath());
+    ui->groupBoxProgress->hide();
 }
 
 void FindKeysDialog::createModels()
@@ -107,9 +108,13 @@ void FindKeysDialog::on_toolButtonFolder_clicked()
 void FindKeysDialog::on_pushButtonFind_clicked()
 {
 
+
     if(ui->radioButtonDatabase->isChecked()) {
+        ui->groupBoxProgress->show();
         SelectKeyDateDialog *selectDateDlg = new SelectKeyDateDialog(this);
         selectDateDlg->exec();
+
+
         selectDateDlg->move(this->geometry().center().x() - selectDateDlg->geometry().center().x(),
                             this->geometry().center().y() - selectDateDlg->geometry().center().y());
 
@@ -117,22 +122,63 @@ void FindKeysDialog::on_pushButtonFind_clicked()
         m_DateWhereStr.clear();
 
         if(selectDateDlg->result() == QDialog::Accepted){
+
             m_DateWhereStr = selectDateDlg->getWhereStr();
+
             databaseFindKey();
+
         }
+        ui->groupBoxProgress->hide();
 
     }
+    if(ui->radioButtonFolder->isChecked()){
+
+    }
+
 
 }
 
 
 void FindKeysDialog::databaseFindKey()
 {
+
+    QApplication::processEvents();
+    QString strSQLWhere = "";
     modelRRO = new QSqlQueryModel();
-    QString strSQL = QString("SELECT r.KEY_ID, r.FIRM_ID, TRIM(r.POSNUMBER), r.DAT, r.KEYDATA, r.DAT_EXPIRE FROM KEYS r "
-            "WHERE r.FIRM_ID= %1 ").arg(m_currentFirmID)
-            + m_DateWhereStr +
-            " ORDER BY r.POSNUMBER";
+    QString strSQL = "SELECT r.KEY_ID, r.FIRM_ID, TRIM(r.POSNUMBER), r.DAT, r.KEYDATA, r.DAT_EXPIRE FROM KEYS r WHERE ";
+
+    if(m_currentFirmID >= 0 && m_DateWhereStr.size() == 0){
+        strSQL += QString("r.FIRM_ID= %1").arg(m_currentFirmID);
+        strSQL += " AND r.POSNUMBER LIKE '";
+        strSQL += (m_rroZN.size() == 0) ? "%'" : m_rroZN +"%'";
+     }
+
+    if(m_currentFirmID >= 0 && m_DateWhereStr.size() > 0){
+        strSQL = QString("r.FIRM_ID= %1 AND %2 " ).arg(m_currentFirmID).arg(m_DateWhereStr);
+        strSQL += " AND r.POSNUMBER LIKE '";
+        strSQL += (m_rroZN.size() == 0) ? "%'" : m_rroZN +"%'";
+     }
+
+    if(m_currentFirmID == -1 && m_DateWhereStr.size() > 0){
+        strSQL += m_DateWhereStr;
+        strSQL += " AND r.POSNUMBER LIKE '";
+        strSQL += (m_rroZN.size() == 0) ? "%'" : m_rroZN +"%'";
+     }
+
+    if(m_currentFirmID == -1 && m_DateWhereStr.size() == 0){
+        strSQL += " r.POSNUMBER LIKE '";
+        strSQL += (m_rroZN.size() == 0) ? "%'" : m_rroZN +"%'";
+     }
+
+
+
+
+//    (m_currentFirmID == -1) ? "WHERE  " : QString("WHERE r.FIRM_ID= %1").arg(m_currentFirmID);
+
+
+    strSQL += " ORDER BY r.POSNUMBER";
+
+     qInfo(logInfo()) << "Str SQL " << strSQL;
     ui->groupBoxRro->show();
     modelRRO->setQuery(strSQL);
     while(modelRRO->canFetchMore())

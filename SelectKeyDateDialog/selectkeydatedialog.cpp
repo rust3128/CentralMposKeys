@@ -53,10 +53,10 @@ void SelectKeyDateDialog::on_pushButtonOk_clicked()
 {
     m_whereStr.clear();
     if(ui->radioButtonCreate->isChecked()){
-        m_whereStr = "AND r.DAT > '" + ui->dateEdit->date().toString("yyyy-MM-dd")+"'";
+        m_whereStr = " r.DAT > '" + ui->dateEdit->date().toString("yyyy-MM-dd")+"'";
     }
     if(ui->radioButtonFinish->isChecked()){
-        m_whereStr = "AND r.DAT_EXPIRE = '"+ ui->dateEdit->date().toString("yyyy-MM-dd")+"'";
+        m_whereStr = " r.DAT_EXPIRE = '"+ ui->dateEdit->date().toString("yyyy-MM-dd")+"'";
     }
 
     this->accept();
