@@ -27,7 +27,9 @@ CONFIG += c++11
 SOURCES += \
         ConnectionSettingDialog/connectionsettingdialog.cpp \
         DataBases/databases.cpp \
+        DataKeysFileClass/datakeysfileclass.cpp \
         FindKeysDialog/findkeysdialog.cpp \
+        KeysFileModel/keysfilemodel.cpp \
         LoggingCategories/loggingcategories.cpp \
         SelectKeyDateDialog/selectkeydatedialog.cpp \
         main.cpp \
@@ -36,7 +38,9 @@ SOURCES += \
 HEADERS += \
         ConnectionSettingDialog/connectionsettingdialog.h \
         DataBases/databases.h \
+        DataKeysFileClass/datakeysfileclass.h \
         FindKeysDialog/findkeysdialog.h \
+        KeysFileModel/keysfilemodel.h \
         LoggingCategories/loggingcategories.h \
         SelectKeyDateDialog/selectkeydatedialog.h \
         mainwindow.h

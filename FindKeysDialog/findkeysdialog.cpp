@@ -1,14 +1,8 @@
 #include "findkeysdialog.h"
 #include "ui_findkeysdialog.h"
-#include "LoggingCategories/loggingcategories.h"
-#include "SelectKeyDateDialog/selectkeydatedialog.h"
 
 
-#include <QRegExpValidator>
-#include <QMessageBox>
-#include <QDateTime>
-#include <QFile>
-#include <QProgressDialog>
+
 
 FindKeysDialog::FindKeysDialog(QWidget *parent) :
     QDialog(parent),
@@ -80,13 +74,13 @@ void FindKeysDialog::slotCheckFindMethod()
         ui->comboBoxFirms->setEnabled(false);
         ui->lineEditPath->setEnabled(true);
         ui->toolButtonFolder->setEnabled(true);
+        ui->comboBoxFirms->setCurrentIndex(-1);
     }
     if(ui->radioButtonDatabase->isChecked()){
         ui->comboBoxFirms->setEnabled(true);
         ui->lineEditPath->setEnabled(false);
         ui->toolButtonFolder->setEnabled(false);
     }
-    qInfo(logInfo()) << "Size RRO num" << m_rroZN.size();
     if((m_rroZN.size() > 0) && (m_rroZN.size() < 10))
         ui->pushButtonFind->setEnabled(false);
 }
@@ -113,29 +107,47 @@ void FindKeysDialog::on_pushButtonFind_clicked()
         ui->groupBoxProgress->show();
         SelectKeyDateDialog *selectDateDlg = new SelectKeyDateDialog(this);
         selectDateDlg->exec();
-
-
         selectDateDlg->move(this->geometry().center().x() - selectDateDlg->geometry().center().x(),
                             this->geometry().center().y() - selectDateDlg->geometry().center().y());
-
-
         m_DateWhereStr.clear();
 
         if(selectDateDlg->result() == QDialog::Accepted){
-
             m_DateWhereStr = selectDateDlg->getWhereStr();
-
             databaseFindKey();
-
         }
         ui->groupBoxProgress->hide();
-
     }
     if(ui->radioButtonFolder->isChecked()){
+        DataKeysFileClass dk;
+
+        QDir dir(ui->lineEditPath->text());
+        QStringList nameFilter;
+        nameFilter << "*.key";
+        QFileInfoList list = dir.entryInfoList(nameFilter, QDir::Files);
+        QFileInfo fileInfo;
+        foreach(fileInfo, list) {
+            qInfo(logInfo()) << fileInfo.fileName();
+            dk.setPosnumber(fileInfo.fileName().mid(8,10));
+            dk.setDatExpire(QDate::fromString(fileInfo.fileName().mid(19,10),"yyyy-MM-dd"));
+            QFile f(fileInfo.absoluteFilePath());
+            if(!f.open(QIODevice::ReadOnly)){
+                qCritical(logCritical()) << "Не могу отрыть файл" << fileInfo.fileName();
+                continue;
+            }
+            dk.setKeyData(QByteArray(f.readAll()));
+            m_fileKeyList.append(dk);
+//            qInfo(logInfo()) << dk.posnumber() << dk.datExpire() << dk.keyData();
+        }
+        qInfo(logInfo()) << "READ files " << m_fileKeyList.size();
+        ui->groupBoxRro->show();
+        modelFromFile = new KeysFileModel(m_fileKeyList);
+        ui->tableView->setModel(modelFromFile);
+        ui->tableView->hideColumn(2);
 
     }
-
-
+    ui->tableView->verticalHeader()->hide();
+    ui->tableView->resizeColumnsToContents();
+    ui->tableView->verticalHeader()->setMinimumSectionSize(ui->tableView->verticalHeader()->minimumSectionSize());
 }
 
 
@@ -170,15 +182,9 @@ void FindKeysDialog::databaseFindKey()
         strSQL += (m_rroZN.size() == 0) ? "%'" : m_rroZN +"%'";
      }
 
-
-
-
-//    (m_currentFirmID == -1) ? "WHERE  " : QString("WHERE r.FIRM_ID= %1").arg(m_currentFirmID);
-
-
     strSQL += " ORDER BY r.POSNUMBER";
 
-     qInfo(logInfo()) << "Str SQL " << strSQL;
+//     qInfo(logInfo()) << "Str SQL " << strSQL;
     ui->groupBoxRro->show();
     modelRRO->setQuery(strSQL);
     while(modelRRO->canFetchMore())
@@ -193,8 +199,6 @@ void FindKeysDialog::databaseFindKey()
     ui->tableView->hideColumn(1);
     ui->tableView->hideColumn(4);
 
-    ui->tableView->verticalHeader()->hide();
-    ui->tableView->resizeColumnsToContents();
     emit signalUpdateLabelInfo("Найдено ключей "+QString::number(rowCount));
 
     ui->labelInfo->show();
@@ -244,8 +248,6 @@ void FindKeysDialog::slotUpdateLabelInfo(QString str)
     ui->labelInfo->setText(str);
 }
 
-
-
 void FindKeysDialog::on_tableView_clicked(const QModelIndex &index)
 {
     Q_UNUSED(index);
@@ -283,8 +285,6 @@ void FindKeysDialog::on_pushButtonSaveFolder_clicked()
         QApplication::processEvents();
         ++progress;
         prDlg.setValue(progress);
-
-
     }
     prDlg.deleteLater();
 }

@@ -1,6 +1,18 @@
 #ifndef FINDKEYSDIALOG_H
 #define FINDKEYSDIALOG_H
 
+
+#include "LoggingCategories/loggingcategories.h"
+#include "SelectKeyDateDialog/selectkeydatedialog.h"
+#include "DataKeysFileClass/datakeysfileclass.h"
+#include "KeysFileModel/keysfilemodel.h"
+
+
+#include <QRegExpValidator>
+#include <QMessageBox>
+#include <QDateTime>
+#include <QFile>
+#include <QProgressDialog>
 #include <QDialog>
 #include <QSqlQuery>
 #include <QSqlError>
@@ -40,6 +52,7 @@ private:
     Ui::FindKeysDialog *ui;
     QSqlQueryModel *modelFirms;
     QSqlQueryModel *modelRRO;
+    KeysFileModel *modelFromFile;
     int m_currentFirmID;
     QString m_currentFirmName;
     int rowCount;
@@ -47,6 +60,7 @@ private:
     QString m_rroZN;
     QString m_DateWhereStr;
     QDir dir;
+    QList<DataKeysFileClass> m_fileKeyList;
 
 private:
     void createConnections();
