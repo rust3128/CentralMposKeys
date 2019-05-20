@@ -118,31 +118,7 @@ void FindKeysDialog::on_pushButtonFind_clicked()
         ui->groupBoxProgress->hide();
     }
     if(ui->radioButtonFolder->isChecked()){
-        DataKeysFileClass dk;
-
-        QDir dir(ui->lineEditPath->text());
-        QStringList nameFilter;
-        nameFilter << "*.key";
-        QFileInfoList list = dir.entryInfoList(nameFilter, QDir::Files);
-        QFileInfo fileInfo;
-        foreach(fileInfo, list) {
-            qInfo(logInfo()) << fileInfo.fileName();
-            dk.setPosnumber(fileInfo.fileName().mid(8,10));
-            dk.setDatExpire(QDate::fromString(fileInfo.fileName().mid(19,10),"yyyy-MM-dd"));
-            QFile f(fileInfo.absoluteFilePath());
-            if(!f.open(QIODevice::ReadOnly)){
-                qCritical(logCritical()) << "Не могу отрыть файл" << fileInfo.fileName();
-                continue;
-            }
-            dk.setKeyData(QByteArray(f.readAll()));
-            m_fileKeyList.append(dk);
-//            qInfo(logInfo()) << dk.posnumber() << dk.datExpire() << dk.keyData();
-        }
-        qInfo(logInfo()) << "READ files " << m_fileKeyList.size();
-        ui->groupBoxRro->show();
-        modelFromFile = new KeysFileModel(m_fileKeyList);
-        ui->tableView->setModel(modelFromFile);
-        ui->tableView->hideColumn(2);
+        fileFindKey();
 
     }
     ui->tableView->verticalHeader()->hide();
@@ -166,7 +142,7 @@ void FindKeysDialog::databaseFindKey()
      }
 
     if(m_currentFirmID >= 0 && m_DateWhereStr.size() > 0){
-        strSQL = QString("r.FIRM_ID= %1 AND %2 " ).arg(m_currentFirmID).arg(m_DateWhereStr);
+        strSQL += QString("r.FIRM_ID= %1 AND %2 " ).arg(m_currentFirmID).arg(m_DateWhereStr);
         strSQL += " AND r.POSNUMBER LIKE '";
         strSQL += (m_rroZN.size() == 0) ? "%'" : m_rroZN +"%'";
      }
@@ -213,6 +189,38 @@ void FindKeysDialog::databaseFindKey()
     while(q.next()){
         ui->plainTextEdit->appendPlainText(q.value(0).toString());
     }
+}
+
+void FindKeysDialog::fileFindKey()
+{
+    DataKeysFileClass dk;
+
+    QDir dir(ui->lineEditPath->text());
+    QStringList nameFilter;
+    nameFilter << "*.key";
+    QFileInfoList list = dir.entryInfoList(nameFilter, QDir::Files);
+    QFileInfo fileInfo;
+    foreach(fileInfo, list) {
+        dk.setPosnumber(fileInfo.fileName().mid(8,10));
+        dk.setDatExpire(QDate::fromString(fileInfo.fileName().mid(19,10),"yyyy-MM-dd"));
+        QFile f(fileInfo.absoluteFilePath());
+        if(!f.open(QIODevice::ReadOnly)){
+            qCritical(logCritical()) << "Не могу отрыть файл" << fileInfo.fileName();
+            continue;
+        }
+        dk.setKeyData(QByteArray(f.readAll()));
+        m_fileKeyList.append(dk);
+    }
+    rowCount= m_fileKeyList.size();
+    emit signalUpdateLabelInfo("Загружено "+QString::number(rowCount)+" файлов с ключами.");
+
+//    qInfo(logInfo()) << "READ files " << m_fileKeyList.size();
+    ui->labelInfo->show();
+    ui->groupBoxRro->show();
+    modelFromFile = new KeysFileModel(m_fileKeyList);
+    ui->tableView->setModel(modelFromFile);
+    ui->tableView->hideColumn(2);
+    ui->pushButtonSaveFolder->setEnabled(false);
 }
 
 
@@ -287,4 +295,20 @@ void FindKeysDialog::on_pushButtonSaveFolder_clicked()
         prDlg.setValue(progress);
     }
     prDlg.deleteLater();
+}
+
+void FindKeysDialog::on_pushButtonSaveDB_clicked()
+{
+    QModelIndexList selection = ui->tableView->selectionModel()->selectedRows();
+    int selCount=selection.size();
+    if(selCount == 0){
+        QMessageBox::information(this, "Ошибка", "Не выбрано ни одного ключа!");
+        return;
+    }
+
+    SelectCentralDBDialog *centralDbDlg = new SelectCentralDBDialog(this);
+    centralDbDlg->exec();
+    centralDbDlg->move(this->geometry().center().x() - centralDbDlg->geometry().center().x(),
+                       this->geometry().center().y() - centralDbDlg->geometry().center().y());
+
 }

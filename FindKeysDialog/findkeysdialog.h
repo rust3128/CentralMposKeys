@@ -6,6 +6,7 @@
 #include "SelectKeyDateDialog/selectkeydatedialog.h"
 #include "DataKeysFileClass/datakeysfileclass.h"
 #include "KeysFileModel/keysfilemodel.h"
+#include "SelectCentralDBDialog/selectcentraldbdialog.h"
 
 
 #include <QRegExpValidator>
@@ -48,6 +49,8 @@ private slots:
 
     void on_pushButtonSaveFolder_clicked();
 
+    void on_pushButtonSaveDB_clicked();
+
 private:
     Ui::FindKeysDialog *ui;
     QSqlQueryModel *modelFirms;
@@ -67,6 +70,7 @@ private:
     void createUI();
     void createModels();
     void databaseFindKey();
+    void fileFindKey();
 
 };
 

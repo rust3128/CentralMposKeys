@@ -31,6 +31,8 @@ SOURCES += \
         FindKeysDialog/findkeysdialog.cpp \
         KeysFileModel/keysfilemodel.cpp \
         LoggingCategories/loggingcategories.cpp \
+        SelectCentralDBDialog/centraldbdialog.cpp \
+        SelectCentralDBDialog/selectcentraldbdialog.cpp \
         SelectKeyDateDialog/selectkeydatedialog.cpp \
         main.cpp \
         mainwindow.cpp
@@ -42,12 +44,16 @@ HEADERS += \
         FindKeysDialog/findkeysdialog.h \
         KeysFileModel/keysfilemodel.h \
         LoggingCategories/loggingcategories.h \
+        SelectCentralDBDialog/centraldbdialog.h \
+        SelectCentralDBDialog/selectcentraldbdialog.h \
         SelectKeyDateDialog/selectkeydatedialog.h \
         mainwindow.h
 
 FORMS += \
         ConnectionSettingDialog/connectionsettingdialog.ui \
         FindKeysDialog/findkeysdialog.ui \
+        SelectCentralDBDialog/centraldbdialog.ui \
+        SelectCentralDBDialog/selectcentraldbdialog.ui \
         SelectKeyDateDialog/selectkeydatedialog.ui \
         mainwindow.ui
 
