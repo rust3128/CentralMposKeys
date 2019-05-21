@@ -29,7 +29,8 @@ void SelectCentralDBDialog::createUI()
     ui->tableView->verticalHeader()->hide();
     ui->tableView->verticalHeader()->setMinimumSectionSize(ui->tableView->verticalHeader()->minimumSectionSize());
     ui->tableView->selectRow(0);
-    connect(ui->tableView, &QAbstractItemView::doubleClicked, this, &SelectCentralDBDialog::slotEditRecord);
+//    connect(ui->tableView, &QAbstractItemView::doubleClicked, this, &SelectCentralDBDialog::slotEditRecord);
+    connect(ui->pushButtonEdit, &QPushButton::clicked, this, &SelectCentralDBDialog::slotEditRecord);
 
 }
 
@@ -65,8 +66,10 @@ void SelectCentralDBDialog::slotUpdateModel()
     ui->tableView->resizeColumnsToContents();
 }
 
-void SelectCentralDBDialog::slotEditRecord(QModelIndex index)
+void SelectCentralDBDialog::slotEditRecord()
 {
+    QModelIndex index=ui->tableView->selectionModel()->currentIndex();
+
     CentralDbDialog *addConnectionsDlg = new CentralDbDialog(index.row());
     connect(addConnectionsDlg, &CentralDbDialog::signalReady, this, &SelectCentralDBDialog::slotUpdateModel);
     addConnectionsDlg->setWindowTitle("Редактировать соединение");

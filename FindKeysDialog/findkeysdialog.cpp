@@ -295,6 +295,10 @@ void FindKeysDialog::on_pushButtonSaveFolder_clicked()
         prDlg.setValue(progress);
     }
     prDlg.deleteLater();
+    QMessageBox::information(this,"Информация",
+                             QString("Сохранено %1 афйлов с ключами.\nВ папку %2")
+                             .arg(selCount)
+                             .arg(pathKey));
 }
 
 void FindKeysDialog::on_pushButtonSaveDB_clicked()

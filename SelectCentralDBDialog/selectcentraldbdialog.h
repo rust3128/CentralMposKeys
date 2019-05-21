@@ -24,7 +24,7 @@ private slots:
 
     void on_pushButtonAdd_clicked();
     void slotUpdateModel();
-    void slotEditRecord(QModelIndex index);
+    void slotEditRecord();
 private:
     Ui::SelectCentralDBDialog *ui;
     QSqlTableModel *modelConnections;
