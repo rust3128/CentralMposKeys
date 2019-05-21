@@ -311,8 +311,29 @@ void FindKeysDialog::on_pushButtonSaveDB_clicked()
     }
 
     SelectCentralDBDialog *centralDbDlg = new SelectCentralDBDialog(this);
-    centralDbDlg->exec();
+    int res = centralDbDlg->exec();
     centralDbDlg->move(this->geometry().center().x() - centralDbDlg->geometry().center().x(),
                        this->geometry().center().y() - centralDbDlg->geometry().center().y());
+    if(res == QDialog::Rejected){
+        return;
+    }
+
+    QSqlRecord connInfo = centralDbDlg->currentConnData();
+//    qInfo(logInfo()) << connInfo;
+
+    QSqlDatabase dbc = QSqlDatabase::addDatabase("QIBASE","dbase");
+
+    dbc.setHostName(connInfo.value(2).toString());
+    dbc.setDatabaseName(connInfo.value(3).toString());
+    dbc.setUserName(connInfo.value(4).toString());
+    dbc.setPassword(connInfo.value(5).toString());
+
+    if(!dbc.open()) {
+        QMessageBox::critical(this, "Ошибка соединения с базой данных",
+                              QString("Не могу соединится с базой данных\n%1:%2.\nПричина:\n%3")
+                              .arg(dbc.hostName())
+                              .arg(dbc.databaseName())
+                              .arg(dbc.lastError().text()));
+    }
 
 }

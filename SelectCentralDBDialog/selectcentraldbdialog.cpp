@@ -16,6 +16,11 @@ SelectCentralDBDialog::~SelectCentralDBDialog()
     delete ui;
 }
 
+QSqlRecord SelectCentralDBDialog::currentConnData()
+{
+    return connRecord;
+}
+
 void SelectCentralDBDialog::on_pushButtonCancel_clicked()
 {
     this->reject();
@@ -77,4 +82,17 @@ void SelectCentralDBDialog::slotEditRecord()
 
     addConnectionsDlg->move(this->geometry().center().x() - addConnectionsDlg->geometry().center().x(),
                        this->geometry().center().y() - addConnectionsDlg->geometry().center().y());
+}
+
+void SelectCentralDBDialog::on_tableView_doubleClicked(const QModelIndex &idx)
+{
+    connRecord = modelConnections->record(idx.row());
+    this->accept();
+}
+
+void SelectCentralDBDialog::on_pushButtonSelect_clicked()
+{
+    QModelIndex idx = ui->tableView->selectionModel()->currentIndex();
+    connRecord = modelConnections->record(idx.row());
+    this->accept();
 }

@@ -17,6 +17,7 @@
 #include <QDialog>
 #include <QSqlQuery>
 #include <QSqlError>
+#include <QSqlRecord>
 #include <QSqlQueryModel>
 #include <QFileDialog>
 
