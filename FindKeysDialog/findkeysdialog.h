@@ -72,6 +72,9 @@ private:
     void createModels();
     void databaseFindKey();
     void fileFindKey();
+    void getKeyOptions();
+    void insertKeyFromDatabase();
+    void insertKeyFromFile();
 
 };
 

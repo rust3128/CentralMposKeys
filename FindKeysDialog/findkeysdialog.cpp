@@ -179,7 +179,34 @@ void FindKeysDialog::databaseFindKey()
 
     ui->labelInfo->show();
     ui->plainTextEdit->setReadOnly(true);
+
+    getKeyOptions();
+
+
+
+}
+
+void FindKeysDialog::getKeyOptions()
+{
     QSqlQuery q;
+
+
+    if(m_currentFirmID < 0){
+        if(ui->radioButtonDatabase->isChecked()){
+            m_currentFirmID= modelRRO->data(modelRRO->index(0,1)).toInt();
+        } else {
+            q.prepare("select k.FIRM_ID, f.name from keys k "
+                      "LEFT JOIN FIRMS f ON f.FIRM_ID = k.FIRM_ID "
+                      "where k.POSNUMBER = :posNumber");
+            q.bindValue(":posNumber", modelFromFile->data(modelFromFile->index(0,0),Qt::DisplayRole).toString());
+            if(!q.exec()) qInfo(logInfo()) << "NO get firmID" << q.lastError().text();
+            q.next();
+            m_currentFirmID = q.value(0).toInt();
+            ui->plainTextEdit->appendHtml("<b>"+q.value(1).toString()+"</b>");
+        }
+
+    }
+
     q.prepare("SELECT o.NAME FROM FIRMKEYOPTIONS r "
               "LEFT JOIN KEYOPTIONS o ON o.KEYOPTION_ID=r.KEYOPTION_ID "
               "where r.FIRM_ID= :firmID "
@@ -190,6 +217,8 @@ void FindKeysDialog::databaseFindKey()
         ui->plainTextEdit->appendPlainText(q.value(0).toString());
     }
 }
+
+
 
 void FindKeysDialog::fileFindKey()
 {
@@ -212,6 +241,7 @@ void FindKeysDialog::fileFindKey()
         m_fileKeyList.append(dk);
     }
     rowCount= m_fileKeyList.size();
+    ui->groupBox->setDisabled(rowCount>0);
     emit signalUpdateLabelInfo("Загружено "+QString::number(rowCount)+" файлов с ключами.");
 
 //    qInfo(logInfo()) << "READ files " << m_fileKeyList.size();
@@ -221,7 +251,10 @@ void FindKeysDialog::fileFindKey()
     ui->tableView->setModel(modelFromFile);
     ui->tableView->hideColumn(2);
     ui->pushButtonSaveFolder->setEnabled(false);
+    getKeyOptions();
 }
+
+
 
 
 void FindKeysDialog::on_lineEditZN_textChanged(const QString &arg1)
@@ -278,6 +311,7 @@ void FindKeysDialog::on_pushButtonSaveFolder_clicked()
     QProgressDialog prDlg(this);
     prDlg.setRange(0, selCount);
     prDlg.setLabelText("Создание файлов с ключами.");
+    prDlg.setCancelButton(nullptr);
     prDlg.show();
     int progress=0;
     for(int i =0;i<selCount;i++){
@@ -334,6 +368,43 @@ void FindKeysDialog::on_pushButtonSaveDB_clicked()
                               .arg(dbc.hostName())
                               .arg(dbc.databaseName())
                               .arg(dbc.lastError().text()));
+        return;
     }
+    if(ui->radioButtonDatabase->isChecked())
+        insertKeyFromDatabase();
+    else
+        insertKeyFromFile();
+
+}
+
+void FindKeysDialog::insertKeyFromFile()
+{
+    QSqlDatabase db = QSqlDatabase::database("dbase");
+    QSqlQuery q = QSqlQuery(db);
+    QModelIndexList selection = ui->tableView->selectionModel()->selectedRows();
+    static int selCount = selection.size();
+    QProgressDialog pd(this);
+    pd.setRange(0,selCount);
+    pd.setLabelText("Добавление ключей в базу данных");
+    QProgressBar pb;
+    pb.setFormat("%v из %m");
+    pd.setBar(&pb);
+    pd.setCancelButton(nullptr);
+    pd.show();
+    int progress = 0;
+
+    for(int i=0;i<selCount; ++i){
+
+    }
+
+}
+
+void FindKeysDialog::insertKeyFromDatabase()
+{
+    QSqlDatabase db = QSqlDatabase::database("dbase");
+    QSqlQuery q = QSqlQuery(db);
+
+
+
 
 }
