@@ -421,7 +421,7 @@ void FindKeysDialog::insertKeyFromFile()
                        "VALUES (:terminalID, :mposkeyID, 1, :posnumber, current_timestamp, '', :keydata)");
             qi.bindValue(":terminalID", terminalID);
             qi.bindValue(":mposkeyID", keyID);
-//            qi.bindValue(":dat",QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
+
             qi.bindValue(":posnumber", posNumber);
             qi.bindValue(":keydata", modelFromFile->data(modelFromFile->index(idx.row(),2),Qt::DisplayRole).toByteArray());
             if(!qi.exec()){
@@ -492,7 +492,7 @@ void FindKeysDialog::insertKeyFromDatabase()
                        "VALUES (:terminalID, :mposkeyID, 1, :posnumber, current_timestamp, '', :keydata)");
             qi.bindValue(":terminalID", terminalID);
             qi.bindValue(":mposkeyID", keyID);
-//            qi.bindValue(":dat",QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
+
             qi.bindValue(":posnumber", posNumber);
             qi.bindValue(":keydata", modelRRO->data(modelRRO->index(idx.row(),4),Qt::DisplayRole).toByteArray());
             if(!qi.exec()){
