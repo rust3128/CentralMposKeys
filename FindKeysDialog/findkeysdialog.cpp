@@ -374,13 +374,17 @@ void FindKeysDialog::on_pushButtonSaveDB_clicked()
         insertKeyFromDatabase();
     else
         insertKeyFromFile();
+    this->accept();
 
 }
 
 void FindKeysDialog::insertKeyFromFile()
 {
     QSqlDatabase db = QSqlDatabase::database("dbase");
+    unsigned int keyAdd = 0;
     QSqlQuery q = QSqlQuery(db);
+    QSqlQuery qi = QSqlQuery(db);
+    QSqlQuery qu = QSqlQuery(db);
     QModelIndexList selection = ui->tableView->selectionModel()->selectedRows();
     static int selCount = selection.size();
     QProgressDialog pd(this);
@@ -394,17 +398,123 @@ void FindKeysDialog::insertKeyFromFile()
     int progress = 0;
 
     for(int i=0;i<selCount; ++i){
+        QModelIndex idx = selection.at(i);
+        QString posNumber = modelFromFile->data(modelFromFile->index(idx.row(),0),Qt::DisplayRole).toString();
+        q.prepare("select DISTINCT m.TERMINAL_ID from mposkeys m where m.POSNUMBER = :posNumber");
+        q.bindValue(":posNumber",posNumber);
+        if(!q.exec()) {
+            qInfo(logInfo()) << "Не удалось получить список терминалов" << q.lastError().text();
+        }
+        qi.prepare("select GEN_ID(gen_mposkeys, 1) from rdb$database");
+        if(!qi.exec()){
+            qInfo(logInfo()) << "Не удалось получить новый keyID" << q.lastError().text();
 
+        }
+        qi.next();
+        int keyID = qi.value(0).toInt();
+        qi.clear();
+        while(q.next()){
+            ++keyAdd;
+            int terminalID = q.value(0).toInt();
+            qInfo(logInfo()) << "TerminalID" << terminalID;
+            qi.prepare("INSERT INTO mposkeys (TERMINAL_ID, MPOSKEY_ID, MPOSKEY_TYPE, POSNUMBER, DAT, REMARK, KEYDATA) "
+                       "VALUES (:terminalID, :mposkeyID, 1, :posnumber, current_timestamp, '', :keydata)");
+            qi.bindValue(":terminalID", terminalID);
+            qi.bindValue(":mposkeyID", keyID);
+//            qi.bindValue(":dat",QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
+            qi.bindValue(":posnumber", posNumber);
+            qi.bindValue(":keydata", modelFromFile->data(modelFromFile->index(idx.row(),2),Qt::DisplayRole).toByteArray());
+            if(!qi.exec()){
+                 qInfo(logInfo()) << "Не удалось добавить запись в MPOSKEYS" << q.lastError().text();
+             }
+
+            qu.prepare("UPDATE OR INSERT INTO MIGRATEOPTIONS (TERMINAL_ID, MIGRATEOPTION_ID, SVALUE, VTYPE, REMARK) "
+                       "VALUES (:terminalID, 5000, :mposkeyID, 'I', '')");
+            qu.bindValue(":terminalID", terminalID);
+            qu.bindValue(":mposkeyID", keyID);
+            if(!qu.exec()){
+                 qInfo(logInfo()) << "Не удалось обновить запись в MIGRATEOPTIONS" << q.lastError().text();
+             }
+        }
+        QApplication::processEvents();
+        ++progress;
+        pd.setValue(progress);
     }
+    pd.deleteLater();
+    QMessageBox::information(this, "Результаты выполнения",
+                             QString("База данных: "+db.hostName()+":"+db.databaseName()+"<br>Выбрано ключей: <b>%1.</b><br>Обработано    : <b>%2.</b>")
+                             .arg(selCount)
+                             .arg(keyAdd));
 
 }
 
 void FindKeysDialog::insertKeyFromDatabase()
 {
     QSqlDatabase db = QSqlDatabase::database("dbase");
+    qInfo(logInfo()) << "Current database" << db.hostName()<<db.databaseName();
+    unsigned int keyAdd = 0;
     QSqlQuery q = QSqlQuery(db);
+    QSqlQuery qi = QSqlQuery(db);
+    QSqlQuery qu = QSqlQuery(db);
+    QModelIndexList selection = ui->tableView->selectionModel()->selectedRows();
+    static int selCount = selection.size();
+    QProgressDialog pd(this);
+    pd.setRange(0,selCount);
+    pd.setLabelText("Добавление ключей в базу данных");
+    QProgressBar pb;
+    pb.setFormat("%v из %m");
+    pd.setBar(&pb);
+    pd.setCancelButton(nullptr);
+    pd.show();
+    int progress = 0;
 
+    for(int i=0;i<selCount; ++i){
+        ++keyAdd;
+        QModelIndex idx = selection.at(i);
+        QString posNumber = modelRRO->data(modelRRO->index(idx.row(),2),Qt::DisplayRole).toString();
+        q.prepare("select DISTINCT m.TERMINAL_ID from mposkeys m where m.POSNUMBER = :posNumber");
+        q.bindValue(":posNumber",posNumber);
+        if(!q.exec()) {
+            qInfo(logInfo()) << "Не удалось получить список терминалов" << q.lastError().text();
+        }
+        qi.prepare("select GEN_ID(gen_mposkeys, 1) from rdb$database");
+        if(!qi.exec()){
+            qInfo(logInfo()) << "Не удалось получить новый keyID" << q.lastError().text();
 
+        }
+        qi.next();
+        int keyID = qi.value(0).toInt();
+        qi.clear();
+        while(q.next()){
+            int terminalID = q.value(0).toInt();
+            qInfo(logInfo()) << "TerminalID" << terminalID;
+            qi.prepare("INSERT INTO mposkeys (TERMINAL_ID, MPOSKEY_ID, MPOSKEY_TYPE, POSNUMBER, DAT, REMARK, KEYDATA) "
+                       "VALUES (:terminalID, :mposkeyID, 1, :posnumber, current_timestamp, '', :keydata)");
+            qi.bindValue(":terminalID", terminalID);
+            qi.bindValue(":mposkeyID", keyID);
+//            qi.bindValue(":dat",QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
+            qi.bindValue(":posnumber", posNumber);
+            qi.bindValue(":keydata", modelRRO->data(modelRRO->index(idx.row(),4),Qt::DisplayRole).toByteArray());
+            if(!qi.exec()){
+                 qInfo(logInfo()) << "Не удалось добавить запись в MPOSKEYS" << q.lastError().text();
+             }
 
-
+            qu.prepare("UPDATE OR INSERT INTO MIGRATEOPTIONS (TERMINAL_ID, MIGRATEOPTION_ID, SVALUE, VTYPE, REMARK) "
+                       "VALUES (:terminalID, 5000, :mposkeyID, 'I', '')");
+            qu.bindValue(":terminalID", terminalID);
+            qu.bindValue(":mposkeyID", keyID);
+            if(!qu.exec()){
+                 qInfo(logInfo()) << "Не удалось обновить запись в MIGRATEOPTIONS" << q.lastError().text();
+             }
+        }
+        QApplication::processEvents();
+        ++progress;
+        pd.setValue(progress);
+    }
+    pd.close();
+    pd.deleteLater();
+    QMessageBox::information(this, "Результаты выполнения",
+                             QString("База данных: "+db.hostName()+":"+db.databaseName()+"<br>Выбрано ключей: <b>%1.</b><br>Обработано    : <b>%2.</b>")
+                             .arg(selCount)
+                             .arg(keyAdd));
 }
