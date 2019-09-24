@@ -39,8 +39,8 @@ int main(int argc, char *argv[])
     DataBases *db = new DataBases();
     if(!db->connectCentralDatabase()){
         qCritical(logCritical()) << "Ошибка открытия баз данных.";
-        qInfo(logInfo()) << "Аварийное завершение работы.";
-        return 1;
+//        qInfo(logInfo()) << "Аварийное завершение работы.";
+//        return 1;
     }
 
     MainWindow w;

@@ -291,7 +291,7 @@ void FindKeysDialog::slotUpdateLabelInfo(QString str)
 
 void FindKeysDialog::on_tableView_clicked(const QModelIndex &index)
 {
-    Q_UNUSED(index);
+    Q_UNUSED(index)
     QModelIndexList selection = ui->tableView->selectionModel()->selectedRows();
     emit signalUpdateLabelInfo("Найдено ключей "+QString::number(rowCount)+". Выбрано "+QString::number(selection.count())+".");
 }
